@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Preterm Age Calculator by OtterDoctor</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 500px;
+      margin: auto;
+      padding: 1em;
+      text-align: center;
+    }
+    label {
+      display: block;
+      margin-top: 1em;
+      text-align: left;
+    }
+    input {
+      width: 100%;
+      padding: 0.5em;
+      margin-top: 0.25em;
+    }
+    button {
+      margin-top: 1.5em;
+      padding: 0.5em 1em;
+      font-size: 1em;
+    }
+    #result {
+      margin-top: 1.5em;
+      font-weight: bold;
+      white-space: pre-line;
+    }
+    .warning {
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>Preterm Age Calculator by OtterDoctor</h2>
+
+  <label>Infant's Date of Birth:
+    <input type="date" id="birthDate" required>
+  </label>
+
+  <label>GA at Birth (Weeks):
+    <input type="number" id="gaWeeks" min="1" max="39" required placeholder="e.g. 29">
+  </label>
+
+  <label>GA at Birth (Days):
+    <input type="number" id="gaDays" min="0" max="6" required placeholder="e.g. 3">
+  </label>
+
+  <label>Current Date:
+    <input type="date" id="currentDate" required>
+  </label>
+
+  <button onclick="Calculate()">Calculate</button>
+
+  <div id="result"></div>
+
+  <script>
+    function Calculate() {
+      const birthDate = new Date(document.getElementById("birthDate").value);
+      const gaWeeks = parseInt(document.getElementById("gaWeeks").value);
+      const gaDays = parseInt(document.getElementById("gaDays").value);
+      const currentDate = new Date(document.getElementById("currentDate").value);
+
+      if (!birthDate || !currentDate || isNaN(birthDate) || isNaN(currentDate) ||
+          isNaN(gaWeeks) || isNaN(gaDays) || gaWeeks < 1 || gaWeeks > 39 || gaDays < 0 || gaDays > 6) {
+        document.getElementById("result").textContent = "Please fill all fields correctly.";
+        return;
+      }
+
+      // Chronological age calculation
+      let years = currentDate.getFullYear() - birthDate.getFullYear();
+      let months = currentDate.getMonth() - birthDate.getMonth();
+      let days = currentDate.getDate() - birthDate.getDate();
+
+      if (days < 0) {
+        months--;
+        days += new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
+      }
+      if (months < 0) {
+        years--;
+        months += 12;
+      }
+
+      const chronoText = `Chronological Age: ${years} years ${months} months ${days} days`;
+
+      // PCA calculation
+      const ageInDays = Math.floor((currentDate - birthDate) / (1000 * 60 * 60 * 24));
+      const totalGADays = (gaWeeks * 7) + gaDays + ageInDays;
+      const pcaWeeks = Math.floor(totalGADays / 7);
+      const pcaDays = totalGADays % 7;
+
+      let pcaText = `PCA (Post-conceptional Age): ${pcaWeeks} weeks ${pcaDays} days`;
+      if (pcaWeeks < 37 || pcaWeeks > 40) {
+        pcaText = `<span class="warning">${pcaText}${pcaWeeks > 40 ? ' - Consider using Corrected Age as primary reference' : ''}</span>`;
+      }
+
+      // Corrected age calculation
+      const correctedBirthDate = new Date(birthDate);
+      correctedBirthDate.setDate(correctedBirthDate.getDate() + (280 - (gaWeeks * 7 + gaDays)));
+
+      let cYears = currentDate.getFullYear() - correctedBirthDate.getFullYear();
+      let cMonths = currentDate.getMonth() - correctedBirthDate.getMonth();
+      let cDays = currentDate.getDate() - correctedBirthDate.getDate();
+
+      if (cDays < 0) {
+        cMonths--;
+        cDays += new Date(currentDate.getFullYear(), currentDate.getMonth(), 0).getDate();
+      }
+      if (cMonths < 0) {
+        cYears--;
+        cMonths += 12;
+      }
+
+      const correctedText = `Corrected Age: ${cYears} years ${cMonths} months ${cDays} days`;
+
+      // Show result
+      document.getElementById("result").innerHTML = `${chronoText}<br>${pcaText}<br>${correctedText}`;
+    }
+  </script>
+</body>
+</html>
